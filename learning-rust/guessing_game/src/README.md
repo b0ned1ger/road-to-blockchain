@@ -1,0 +1,1 @@
+Cargo.lock should be ignored for libraries, tracked for binaries.
