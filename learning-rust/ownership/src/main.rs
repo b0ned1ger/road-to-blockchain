@@ -109,4 +109,97 @@ fn main() {
   }
   // But this is too much ceremony and a lot of work for a concept that should be common.
   // Luckily for us, Rust has a feature for this concept, called references.
+
+  println!("===== Reference and borrowing");
+  {
+    // & - reference operator
+    // * - dereference operator
+    // These ampersands means that function takes references of a variable as an argument
+    fn calculate_length(s: &String) -> usize {
+      s.len() // s would be a pointer to a pointer in C
+    }
+
+    let s1 = String::from("Hello");
+    // The &s1 syntax lets us create a reference that refers to the value of s1 but does not own it.
+    // Because it does not own it, the value it points to will not be dropped when the reference stops being used.
+    // We call the action of creating a reference borrowing
+    let len = calculate_length(&s1);
+    // Just as variables are immutable by default, so are references
+    // You cannot alter what is borrowed
+    println!("s1 = {}, len = {}", s1, len );
+  }
+
+  println!("===== Mutable References");
+  {
+    // But mutable references have one big restriction: you can have only
+    // one mutable reference to a particular piece of data at a time.
+    // The benefit of having this restriction is that Rust can prevent data races at compile time. 
+    fn change(some_string: &mut String){
+      some_string.push_str(" Eyo");
+    }
+
+    let mut s = String::from("Hello");
+    // the change function will mutate the value it borrows.
+    change(&mut s);
+    println!("s1 = {}", s);
+  }
+
+  println!("===== Multiple Mutable references");
+  {
+    let mut s = String::from("Hello");
+    {
+      let _r1 = &mut s;
+    } // r1 goes out of scope, so we can meke new reference with no problem
+    let _r2 = &mut s;
+  }
+
+  println!("===== Mutable and immutable references together");
+  {
+    // We also cannot have a mutable reference while we have an immutable one.
+    let s = String::from("Hello");
+    let _r1 = &s; // no problem
+    let _r2 = &s; // no problem
+    // let _r3 = &mut s; // BIG PROBLEM
+    println!("{}, {}, {}", _r1, _r2, s);
+    // Users of an immutable reference don’t expect the values to suddenly change out from under them!
+    // However, multiple immutable references are okay because no one who is just reading the data
+    // has the ability to affect anyone else’s reading of the data.
+
+    {
+      // a reference’s scope starts from where it is introduced
+      // and continues through the last time that reference is used. 
+      let mut s = String::from("hello");
+
+      let r1 = &s; // no problem
+      let r2 = &s; // no problem
+      println!("{} and {}", r1, r2);
+      // variables r1 and r2 will not be used after this point
+  
+      let r3 = &mut s; // no problem
+      println!("{}", r3);
+    }
+  }
+
+  println!("===== Dangling reference");
+  {
+    // a dangling pointer, a pointer that references a location in memory that may have been
+    // given to someone else, by freeing some memory while preserving a pointer to that memory
+    // In Rust, the compiler guarantees that references will never be dangling references:
+    // if you have a reference to some data, the compiler will ensure that the
+    // data will not go out of scope before the reference to the data does.
+
+    //fn dangle() -> &String { // dangle returns a reference to a String      
+    fn dangle() -> String { // solution is to return String directly
+      let s = String::from("Salamaleikum"); // s is a new String
+      s // we return a reference to the String, s
+      // &s // we return a reference to the String, s
+    } // Here, s goes out of scope, and is dropped. Its memory goes away.
+
+    let reference_to_nothing = dangle();
+    println!("{}", reference_to_nothing)
+
+  }
+  // Let’s recap what we’ve discussed about references:
+  // * At any given time, you can have either one mutable reference or any number of immutable references.
+  // * References must always be valid.
 }
